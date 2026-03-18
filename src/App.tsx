@@ -8,7 +8,7 @@ const CONFIG = {
   OWNER_EMAIL: "whitespace.creativedesign@gmail.com",       // ← YOUR email → auto-admin on register
   OWNER_PASSWORD: "admin@studyforge",  // ← YOUR admin password
   RAZORPAY_KEY: "rzp_test_XXXX",       // ← paste Razorpay key here
-  ANTHROPIC_KEY: "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",                   // ← paste Anthropic key OR leave blank (users add own)
+  ANTHROPIC_KEY: "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",                   // ← paste Anthropic key OR leave blank (users add own)
   FREE_AI_LIMIT: 5,
   PRO_PRICE: 9900,
   PRO_PRICE_DISPLAY: "₹99",
