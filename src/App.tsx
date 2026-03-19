@@ -1640,16 +1640,47 @@ const saveApiKey  = k  => localStorage.setItem("sf_api", k);
 
 // ── AI CALL ──────────────────────────────────────────────
 async function callAI(messages, system) {
-  const key = getApiKey();
-  if(!key) throw new Error("NO_KEY");
-  const res = await fetch("https://api.anthropic.com/v1/messages",{
-    method:"POST",
-    headers:{"Content-Type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01"},
-    body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,system,messages})
-  });
-  if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e?.error?.message||`API ${res.status}`);}
-  const d=await res.json();
-  return d.content?.filter(b=>b.type==="text").map(b=>b.text).join("")||"";
+  const session = getSession();
+  const plan = session?.plan || "free";
+  const adminPersonalKey = getApiKey();
+
+  const headers = {
+    "Content-Type": "application/json",
+    "x-plan": plan,
+  };
+
+  if (plan === "admin" && adminPersonalKey) {
+    headers["x-user-key"] = adminPersonalKey;
+  }
+
+  try {
+    const res = await fetch("/api/claude", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 800,
+        system: system || "",
+        messages
+      })
+    });
+
+    if (!res.ok) {
+      const e = await res.json().catch(() => ({}));
+      if (e?.error === "NO_KEY") throw new Error("NO_KEY");
+      throw new Error(e?.error?.message || e?.error || `API error ${res.status}`);
+    }
+
+    const d = await res.json();
+    return d.content?.filter(b => b.type === "text").map(b => b.text).join("") || "";
+
+  } catch (err) {
+    if (err.message === "NO_KEY") throw err;
+    if (err.message.includes("Failed to fetch")) {
+      throw new Error("Connection failed. Check your internet and try again.");
+    }
+    throw err;
+  }
 }
 
 // ── HELPERS ──────────────────────────────────────────────
