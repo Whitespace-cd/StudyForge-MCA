@@ -5,7 +5,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 //  CONFIG — change only these lines
 // ═══════════════════════════════════════════════════════
 const CONFIG = {
-  OWNER_EMAIL: "whitespace.creativedesign@gmail.com",
+  OWNER_EMAIL: "your@email.com",
   OWNER_PASSWORD: "admin@studyforge",
   RAZORPAY_KEY: "rzp_test_XXXX",
   ANTHROPIC_KEY: "",
@@ -1640,44 +1640,33 @@ const saveApiKey  = k  => localStorage.setItem("sf_api", k);
 
 // ── AI CALL ──────────────────────────────────────────────
 async function callAI(messages, system) {
-  const session = getSession();
-  const plan = session?.plan || "free";
-  const adminPersonalKey = getApiKey();
-
-  const headers = {
-    "Content-Type": "application/json",
-    "x-plan": plan,
-  };
-
-  if (plan === "admin" && adminPersonalKey) {
-    headers["x-user-key"] = adminPersonalKey;
-  }
-
+  const key = getApiKey();
+  if(!key) throw new Error("NO_KEY");
   try {
-    const res = await fetch("/api/claude", {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
-      headers,
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": key,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true"
+      },
       body: JSON.stringify({
         model: "claude-sonnet-4-20250514",
-        max_tokens: 800,
+        max_tokens: 1000,
         system: system || "",
         messages
       })
     });
-
-    if (!res.ok) {
-      const e = await res.json().catch(() => ({}));
-      if (e?.error === "NO_KEY") throw new Error("NO_KEY");
-      throw new Error(e?.error?.message || e?.error || `API error ${res.status}`);
+    if(!res.ok){
+      const e=await res.json().catch(()=>({}));
+      throw new Error(e?.error?.message || `API error ${res.status}`);
     }
-
-    const d = await res.json();
-    return d.content?.filter(b => b.type === "text").map(b => b.text).join("") || "";
-
-  } catch (err) {
-    if (err.message === "NO_KEY") throw err;
-    if (err.message.includes("Failed to fetch")) {
-      throw new Error("Connection failed. Check your internet and try again.");
+    const d=await res.json();
+    return d.content?.filter(b=>b.type==="text").map(b=>b.text).join("")||"";
+  } catch(err) {
+    if(err.message.includes("Failed to fetch")) {
+      throw new Error("Connection failed. Check internet.");
     }
     throw err;
   }
@@ -1937,9 +1926,9 @@ function MainApp({user,data,setData,plan,apiKey,setApiKey,onLogout,showSettings,
 //  SETTINGS — FIXED: explains key clearly, not auto-shown
 // ═══════════════════════════════════════════════════════
 function SettingsModal({user,apiKey,setApiKey,plan,onClose,onUpgrade}){
-  const [key,setKey]=useState(apiKey);
+  const [key,setKey]=useState(getApiKey());
   const save=()=>{setApiKey(key);saveApiKey(key);onClose();};
-  const hasKey=!!apiKey;
+  const hasKey=!!getApiKey();
 
   return (
     <div style={{position:"fixed",inset:0,background:"#000000cc",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:20}}>
