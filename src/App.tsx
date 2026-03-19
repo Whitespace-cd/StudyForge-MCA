@@ -1640,19 +1640,9 @@ const saveApiKey  = k  => localStorage.setItem("sf_api", k);
 
 // ── AI CALL ──────────────────────────────────────────────
 async function callAI(messages, system) {
-  const key = getApiKey();
-  if(!key) throw new Error("NO_KEY");
-
-  // Use proxy to avoid CORS issues
-  const proxyUrl = "/api/claude";
-
-  const res = await fetch(proxyUrl, {
+  const res = await fetch("/api/claude", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": key,
-      "anthropic-version": "2023-06-01"
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       model: "claude-sonnet-4-20250514",
       max_tokens: 1000,
@@ -1660,6 +1650,14 @@ async function callAI(messages, system) {
       messages
     })
   });
+
+  if (!res.ok) {
+    const e = await res.json().catch(() => ({}));
+    throw new Error(e?.error?.message || `API error ${res.status}`);
+  }
+  const d = await res.json();
+  return d.content?.filter(b => b.type === "text").map(b => b.text).join("") || "";
+}
 
   if (!res.ok) {
     const e = await res.json().catch(() => ({}));
