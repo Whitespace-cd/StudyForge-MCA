@@ -5,7 +5,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 //  CONFIG — change only these lines
 // ═══════════════════════════════════════════════════════
 const CONFIG = {
-  OWNER_EMAIL: "your@email.com",
+  OWNER_EMAIL: "whitespace.creativedesign@gmail.com",
   OWNER_PASSWORD: "admin@studyforge",
   RAZORPAY_KEY: "rzp_test_XXXX",
   ANTHROPIC_KEY: "",
