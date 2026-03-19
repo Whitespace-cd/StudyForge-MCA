@@ -1745,6 +1745,9 @@ function AuthScreen({onLogin}){
       const users=getUsers();
       if(mode==="register"){
         if(!name||!email||!pass){setErr("Please fill all fields.");setLoading(false);return;}
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if(!emailRegex.test(email)){setErr("Please enter a valid email address (e.g. priya@gmail.com)");setLoading(false);return;}
+        if(pass.length < 6){setErr("Password must be at least 6 characters.");setLoading(false);return;}
         if(users.find(u=>u.email===email)){setErr("Email already registered. Try Sign In.");setLoading(false);return;}
         const isOwner=email===CONFIG.OWNER_EMAIL&&pass===CONFIG.OWNER_PASSWORD;
         const nu={id:`u_${Date.now()}`,name,email,pass,plan:isOwner?"admin":"free",joined:Date.now()};
@@ -1771,7 +1774,7 @@ function AuthScreen({onLogin}){
         <div style={{textAlign:"center",marginBottom:30}}>
           <div style={{display:"inline-flex",alignItems:"center",justifyContent:"center",width:52,height:52,borderRadius:14,background:"linear-gradient(135deg,#00c9a7,#7c3aed)",fontSize:24,marginBottom:12}}>🎓</div>
           <div style={{fontSize:22,fontWeight:600,color:"#fff",letterSpacing:2}}>STUDYFORGE</div>
-          <div style={{fontSize:10,color:"#ffffff33",letterSpacing:3,marginTop:4}}>MCA · ANNA UNIVERSITY · SEM 1</div>
+          <div style={{fontSize:10,color:"#ffffff33",letterSpacing:3,marginTop:4}}>MCA ·  · SEM 1</div>
         </div>
 
         <Card style={{padding:26}}>
@@ -1931,14 +1934,20 @@ function SettingsModal({user,apiKey,setApiKey,plan,onClose,onUpgrade}){
         </div>
 
         <div style={{fontSize:10,color:"#ffffff44",letterSpacing:2,marginBottom:6}}>ANTHROPIC API KEY</div>
-        <div style={{fontSize:11,color:"#ffffff33",marginBottom:10,lineHeight:1.8}}>
-          📌 How to get free key:<br/>
-          1. Go to <span style={{color:"#00c9a7"}}>console.anthropic.com</span><br/>
-          2. Sign up free → API Keys → Create Key<br/>
-          3. Copy the key (starts with sk-ant-...)<br/>
-          4. Paste below → Save<br/>
-          <span style={{color:"#ffffff22"}}>Free $5 credit = ~200 AI calls. Key stays only on your device.</span>
-        </div>
+        {plan==="admin" ? (
+          <div style={{fontSize:11,color:"#ffffff33",marginBottom:10,lineHeight:1.8}}>
+            📌 How to get free key:<br/>
+            1. Go to <span style={{color:"#00c9a7"}}>console.anthropic.com</span><br/>
+            2. Sign up free → API Keys → Create Key<br/>
+            3. Copy the key (starts with sk-ant-...)<br/>
+            4. Paste below → Save<br/>
+            <span style={{color:"#ffffff22"}}>Free $5 credit = ~200 AI calls. Key stays only on your device.</span>
+          </div>
+        ) : (
+          <div style={{fontSize:11,color:"#ffffff33",marginBottom:10,lineHeight:1.7}}>
+            Enter your API key below to enable AI features. Contact the app owner if you need help getting one.
+          </div>
+        )}
         <input type="password" value={key} onChange={e=>setKey(e.target.value)} placeholder="sk-ant-api03-..."
           style={{width:"100%",background:"#ffffff08",border:"1px solid #ffffff22",borderRadius:9,padding:"11px 14px",color:"#dde1f0",fontSize:13,outline:"none",marginBottom:14}}/>
         <div style={{display:"flex",gap:10}}>
@@ -2129,7 +2138,7 @@ function DashTab({user,data,plan,aiLeft,onUpgrade,onAdmin}){
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:22,flexWrap:"wrap",gap:12}}>
         <div>
           <h2 style={{fontSize:19,fontWeight:600,color:"#fff"}}>Welcome back, {user.name.split(" ")[0]}! 👋</h2>
-          <p style={{color:"#ffffff44",fontSize:12,marginTop:4}}>Anna University MCA · Semester 1 · {SUBJECTS.length} Subjects</p>
+          <p style={{color:"#ffffff44",fontSize:12,marginTop:4}}> MCA · Semester 1 · {SUBJECTS.length} Subjects</p>
         </div>
         {plan==="free"&&<Btn onClick={onUpgrade} c="#00c9a7">⚡ Upgrade to Pro</Btn>}
       </div>
@@ -2428,7 +2437,7 @@ function LearnTab({data,setData,plan,tryAI,recordAI}){
     const isDSA=s.id==="ds"||s.id==="py";
     const extra=isDSA?"\n\nIMPORTANT: This is a DSA topic. The student says they understand NOTHING about DSA. Be extra patient. Start from absolute basics. Use extremely simple language and super relatable examples.":" ";
     const prompts={
-      explain:`Teach "${t.title}" from "${s.title}" for Anna University MCA Sem 1.${extra}
+      explain:`Teach "${t.title}" from "${s.title}" for  MCA Sem 1.${extra}
 
 ## 🤔 WHAT IS IT? (Simple Definition)
 [2-3 sentences. Like explaining to a 10-year-old friend.]
@@ -2608,7 +2617,7 @@ function PracticeTab({data,setData,plan,tryAI,recordAI}){
     if(!ans.trim())return;
     setLoading(true);setResult(null);setErr("");
     try{
-      const r=await callAI([{role:"user",content:`Evaluate this ${q.marks}-mark Anna University MCA exam answer.
+      const r=await callAI([{role:"user",content:`Evaluate this ${q.marks}-mark  MCA exam answer.
 QUESTION: ${q.question}
 STUDENT ANSWER: ${ans}
 KEY POINTS EXPECTED: ${q.kp.map((p,i)=>`${i+1}. ${p}`).join("\n")}
@@ -2619,7 +2628,7 @@ MARKS_AWARDED: [n]/${q.marks}
 ❌ WHAT YOU MISSED:\n- [point]
 💡 HOW TO IMPROVE:\n- [suggestion]
 📝 GRADE: [A/B/C/D]
-🔁 PERFECT ANSWER HAS:\n[2-3 lines]`}],"Anna University evaluator. Simple English. Kind and specific.");
+🔁 PERFECT ANSWER HAS:\n[2-3 lines]`}]," evaluator. Simple English. Kind and specific.");
       const m=r.match(/MARKS_AWARDED:\s*(\d+)/);
       const got=m?Math.min(parseInt(m[1]),q.marks):0;
       setResult({text:r,got});
@@ -3361,7 +3370,7 @@ function TestTab({data,setData,plan,tryAI,recordAI}){
 //         <div style={{textAlign:"center",marginBottom:32}}>
 //           <div style={{display:"inline-flex",alignItems:"center",justifyContent:"center",width:52,height:52,borderRadius:14,background:"linear-gradient(135deg,#00c9a7,#7c3aed)",fontSize:24,marginBottom:12}}>🎓</div>
 //           <div style={{fontSize:22,fontWeight:600,color:"#fff",letterSpacing:2}}>STUDYFORGE</div>
-//           <div style={{fontSize:10,color:"#ffffff33",letterSpacing:3,marginTop:4}}>MCA · ANNA UNIVERSITY · SEM 1</div>
+//           <div style={{fontSize:10,color:"#ffffff33",letterSpacing:3,marginTop:4}}>MCA ·  · SEM 1</div>
 //         </div>
 
 //         <Card style={{padding:26}}>
@@ -3756,7 +3765,7 @@ function TestTab({data,setData,plan,tryAI,recordAI}){
 //               <div style={{fontWeight:600,color:"#a78bfa",marginBottom:10,fontSize:12}}>🚀 GROW YOUR USER BASE</div>
 //               <div style={{fontSize:11,color:"#ffffff44",lineHeight:1.95}}>
 //                 • Share in MCA WhatsApp groups<br/>
-//                 • Post in Anna University Facebook groups<br/>
+//                 • Post in  Facebook groups<br/>
 //                 • Share with coaching centres (batch deals)<br/>
 //                 • Offer 1 month free to first 20 students<br/>
 //                 • Add VTU, Madras Univ to attract more users
@@ -3795,7 +3804,7 @@ function TestTab({data,setData,plan,tryAI,recordAI}){
 //       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:22,flexWrap:"wrap",gap:12}}>
 //         <div>
 //           <h2 style={{fontSize:19,fontWeight:600,color:"#fff"}}>Welcome back, {user.name.split(" ")[0]}! 👋</h2>
-//           <p style={{color:"#ffffff44",fontSize:12,marginTop:4}}>Anna University MCA · Semester 1 · {SUBJECTS.length} Subjects</p>
+//           <p style={{color:"#ffffff44",fontSize:12,marginTop:4}}> MCA · Semester 1 · {SUBJECTS.length} Subjects</p>
 //         </div>
 //         {plan==="free"&&<Btn onClick={onUpgrade} c="#00c9a7">⚡ Upgrade to Pro</Btn>}
 //       </div>
@@ -3883,7 +3892,7 @@ function TestTab({data,setData,plan,tryAI,recordAI}){
 //   const load=(t,s,m="explain")=>tryAI(async()=>{
 //     setLoading(true);setErr("");setContent("");
 //     const prompts={
-//       explain:`Teach "${t.title}" from "${s.title}" for Anna University MCA Sem 1.
+//       explain:`Teach "${t.title}" from "${s.title}" for  MCA Sem 1.
 
 // ## 🤔 WHAT IS IT?
 // [2-3 simple sentences. Explain like to a school friend.]
@@ -4071,7 +4080,7 @@ function TestTab({data,setData,plan,tryAI,recordAI}){
 //     if(!ans.trim()) return;
 //     setLoading(true);setResult(null);setErr("");
 //     try{
-//       const r=await callAI([{role:"user",content:`Evaluate this ${q.marks}-mark answer for Anna University MCA.
+//       const r=await callAI([{role:"user",content:`Evaluate this ${q.marks}-mark answer for  MCA.
 // QUESTION: ${q.question}
 // STUDENT ANSWER: ${ans}
 // KEY POINTS: ${q.kp.map((p,i)=>`${i+1}. ${p}`).join("\n")}
@@ -4091,7 +4100,7 @@ function TestTab({data,setData,plan,tryAI,recordAI}){
 // 📝 GRADE: [A/B/C/D]
 
 // 🔁 PERFECT ANSWER SHOULD HAVE:
-// [2-3 lines]`}],"Anna University exam evaluator. Simple English. Be kind and specific.");
+// [2-3 lines]`}]," exam evaluator. Simple English. Be kind and specific.");
 //       const m=r.match(/MARKS_AWARDED:\s*(\d+)/);
 //       const got=m?Math.min(parseInt(m[1]),q.marks):0;
 //       setResult({text:r,got});
@@ -4507,7 +4516,7 @@ function TestTab({data,setData,plan,tryAI,recordAI}){
 // // // ── CONFIG ─────────────────────────────────────────────────────────
 // // const CONFIG = {
 // //   appName: 'StudyForge',
-// //   tagline: 'MCA · Anna University · Sem 1',
+// //   tagline: 'MCA ·  · Sem 1',
 // //   OWNER_EMAIL: 'whitespace.creativedesign@gmail.com', // ← change this to YOUR email
 // //   RAZORPAY_KEY: 'rzp_test_XXXXXXXXXXXX', // ← paste your Razorpay test key
 // //   ANTHROPIC_KEY:
@@ -5775,7 +5784,7 @@ function TestTab({data,setData,plan,tryAI,recordAI}){
 // //               marginTop: 4,
 // //             }}
 // //           >
-// //             MCA · ANNA UNIVERSITY · SEM 1
+// //             MCA ·  · SEM 1
 // //           </div>
 // //         </div>
 
@@ -6835,7 +6844,7 @@ function TestTab({data,setData,plan,tryAI,recordAI}){
 // //               >
 // //                 • Share in MCA WhatsApp groups
 // //                 <br />
-// //                 • Post in Anna University Facebook groups
+// //                 • Post in  Facebook groups
 // //                 <br />
 // //                 • Share with coaching centres (batch deals)
 // //                 <br />
@@ -6910,7 +6919,7 @@ function TestTab({data,setData,plan,tryAI,recordAI}){
 // //             Welcome back, {user.name.split(' ')[0]}! 👋
 // //           </h2>
 // //           <p style={{ color: '#ffffff44', fontSize: 12, marginTop: 4 }}>
-// //             Anna University MCA · Semester 1 · {SUBJECTS.length} Subjects
+// //              MCA · Semester 1 · {SUBJECTS.length} Subjects
 // //           </p>
 // //         </div>
 // //         {plan === 'free' && (
@@ -7098,7 +7107,7 @@ function TestTab({data,setData,plan,tryAI,recordAI}){
 // // - Never just define something. Always show WHY it matters and HOW it actually works.
 // // - Be warm and encouraging like a helpful senior friend`;
 // //       const prompts = {
-// //         explain: `Teach me "${t.title}" from "${s.title}" (MCA Anna University Sem 1).
+// //         explain: `Teach me "${t.title}" from "${s.title}" (MCA  Sem 1).
 
 // // Use EXACTLY this structure:
 
@@ -7509,7 +7518,7 @@ function TestTab({data,setData,plan,tryAI,recordAI}){
 // //       setLoading(true);
 // //       setResult(null);
 // //       setErr('');
-// //       const SYSTEM = `You are an Anna University exam evaluator. Use simple English. Be kind and specific. No big words.`;
+// //       const SYSTEM = `You are an  exam evaluator. Use simple English. Be kind and specific. No big words.`;
 // //       const prompt = `Evaluate this ${q.marks}-mark answer for MCA exam.
 
 // // QUESTION: ${q.question}
