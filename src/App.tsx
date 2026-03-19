@@ -1640,9 +1640,23 @@ const saveApiKey  = k  => localStorage.setItem("sf_api", k);
 
 // ── AI CALL ──────────────────────────────────────────────
 async function callAI(messages, system) {
+  const session = getSession();
+  const plan = session?.plan || "free";
+  const adminPersonalKey = getApiKey();
+
+  const headers = {
+    "Content-Type": "application/json",
+    "x-plan": plan,
+  };
+
+  // Admin using their own personal key
+  if (plan === "admin" && adminPersonalKey) {
+    headers["x-user-key"] = adminPersonalKey;
+  }
+
   const res = await fetch("/api/claude", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify({
       model: "claude-sonnet-4-20250514",
       max_tokens: 1000,
@@ -1915,6 +1929,9 @@ function MainApp({user,data,setData,plan,apiKey,setApiKey,onLogout,showSettings,
 // ═══════════════════════════════════════════════════════
 //  SETTINGS — FIXED: explains key clearly, not auto-shown
 // ═══════════════════════════════════════════════════════
+
+const [adminKey, setAdminKey] = useState(getApiKey());
+
 function SettingsModal({user, plan, onClose, onUpgrade}) {
   return (
     <div style={{position:"fixed",inset:0,background:"#000000cc",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:20}}>
@@ -1956,14 +1973,55 @@ function SettingsModal({user, plan, onClose, onUpgrade}) {
           </div>
         )}
 
-        {plan === "admin" && (
-          <div style={{background:"#f59e0b0d",border:"1px solid #f59e0b30",borderRadius:10,padding:14,marginBottom:16}}>
-            <div style={{fontWeight:600,color:"#f59e0b",fontSize:13,marginBottom:6}}>⚡ Admin — Full Access</div>
-            <div style={{fontSize:12,color:"#ffffff55",lineHeight:1.8}}>
-              You have full unlimited access as the owner.
-            </div>
-          </div>
-        )}
+{plan === "admin" && (
+  <>
+    <div style={{background:"#f59e0b0d",border:"1px solid #f59e0b30",borderRadius:10,padding:14,marginBottom:14}}>
+      <div style={{fontWeight:600,color:"#f59e0b",fontSize:13,marginBottom:6}}>⚡ Admin — Full Access</div>
+      <div style={{fontSize:12,color:"#ffffff55",lineHeight:1.8}}>
+        You are the owner. Add your personal Anthropic key below to study for free using your own account's credits.
+      </div>
+    </div>
+
+    <div style={{fontSize:10,color:"#ffffff44",letterSpacing:2,marginBottom:6,fontWeight:600}}>YOUR PERSONAL ANTHROPIC KEY</div>
+    <div style={{fontSize:11,color:"#ffffff33",marginBottom:10,lineHeight:1.8}}>
+      📌 Get free key:<br/>
+      1. Go to <span style={{color:"#f59e0b"}}>console.anthropic.com</span><br/>
+      2. Sign up with any email → API Keys → Create Key<br/>
+      3. Paste below → Save<br/>
+      <span style={{color:"#ffffff22"}}>Free $5 credit = ~200 AI calls for your own studying.</span>
+    </div>
+
+    <input
+      type="password"
+      value={adminKey}
+      onChange={e=>setAdminKey(e.target.value)}
+      placeholder="sk-ant-api03-..."
+      style={{width:"100%",background:"#ffffff08",border:"1px solid #f59e0b33",
+        borderRadius:9,padding:"11px 14px",color:"#dde1f0",fontSize:13,
+        outline:"none",marginBottom:12}}
+    />
+
+    {/* Show if key is saved */}
+    {getApiKey() && (
+      <div style={{background:"#00c9a710",border:"1px solid #00c9a730",borderRadius:8,
+        padding:"8px 12px",fontSize:11,color:"#6ee7b7",marginBottom:12}}>
+        ✅ Personal key saved — AI features active for your account!
+      </div>
+    )}
+
+    <button onClick={()=>{saveApiKey(adminKey);onClose();}}
+      style={{width:"100%",padding:"11px",background:"#f59e0b22",border:"1px solid #f59e0b44",
+        borderRadius:9,color:"#f59e0b",cursor:"pointer",fontSize:13,fontWeight:600,marginBottom:8}}>
+      Save My Personal Key
+    </button>
+
+    <button onClick={()=>{saveApiKey("");setAdminKey("");onClose();}}
+      style={{width:"100%",padding:"9px",background:"transparent",border:"1px solid #ffffff15",
+        borderRadius:9,color:"#ffffff33",cursor:"pointer",fontSize:11}}>
+      Clear Key
+    </button>
+  </>
+)}
 
         {/* Upgrade button for free users */}
         {plan === "free" && (
