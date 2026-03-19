@@ -1659,14 +1659,6 @@ async function callAI(messages, system) {
   return d.content?.filter(b => b.type === "text").map(b => b.text).join("") || "";
 }
 
-  if (!res.ok) {
-    const e = await res.json().catch(() => ({}));
-    throw new Error(e?.error?.message || `API error ${res.status}`);
-  }
-  const d = await res.json();
-  return d.content?.filter(b => b.type === "text").map(b => b.text).join("") || "";
-}
-
 // ── HELPERS ──────────────────────────────────────────────
 function useData(user){
   const uid=user?.id;
