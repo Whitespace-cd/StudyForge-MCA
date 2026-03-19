@@ -1925,53 +1925,67 @@ function MainApp({user,data,setData,plan,apiKey,setApiKey,onLogout,showSettings,
 // ═══════════════════════════════════════════════════════
 //  SETTINGS — FIXED: explains key clearly, not auto-shown
 // ═══════════════════════════════════════════════════════
-function SettingsModal({user,apiKey,setApiKey,plan,onClose,onUpgrade}){
-  const [key,setKey]=useState(apiKey);
-  const save=()=>{setApiKey(key);saveApiKey(key);onClose();};
-  const hasKey=!!apiKey;
-
+function SettingsModal({user, plan, onClose, onUpgrade}) {
   return (
     <div style={{position:"fixed",inset:0,background:"#000000cc",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:20}}>
-      <Card style={{width:"100%",maxWidth:480,padding:26}}>
+      <div style={{background:"#0d0d18",border:"1px solid #ffffff0d",borderRadius:14,width:"100%",maxWidth:420,padding:26}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
           <div style={{fontWeight:600,fontSize:15,color:"#fff"}}>⚙ Settings</div>
           <button onClick={onClose} style={{background:"transparent",border:"none",color:"#ffffff55",cursor:"pointer",fontSize:20,lineHeight:1}}>✕</button>
         </div>
 
+        {/* User info */}
         <div style={{background:"#ffffff08",borderRadius:10,padding:14,marginBottom:18}}>
           <div style={{fontSize:10,color:"#ffffff44",marginBottom:4,letterSpacing:2}}>LOGGED IN AS</div>
-          <div style={{color:"#fff",fontWeight:500}}>{user.name}</div>
+          <div style={{color:"#fff",fontWeight:500,fontSize:15}}>{user.name}</div>
           <div style={{color:"#ffffff44",fontSize:12,marginTop:2}}>{user.email}</div>
-          <div style={{marginTop:8}}><Badge c={plan==="admin"?"#f59e0b":plan==="pro"?"#00c9a7":"#ffffff55"}>{plan.toUpperCase()}</Badge></div>
-        </div>
-
-        {/* API Key status */}
-        <div style={{background:hasKey?"#00c9a710":"#f59e0b10",border:`1px solid ${hasKey?"#00c9a730":"#f59e0b30"}`,borderRadius:10,padding:12,marginBottom:14,fontSize:12,color:hasKey?"#6ee7b7":"#fcd34d",lineHeight:1.7}}>
-          {hasKey?"✅ API key is set. AI features are working!":"⚠ No API key set. You need this to use AI explanations and evaluation."}
-        </div>
-
-        <div style={{fontSize:10,color:"#ffffff44",letterSpacing:2,marginBottom:6}}>ANTHROPIC API KEY</div>
-        {plan==="admin" ? (
-          <div style={{fontSize:11,color:"#ffffff33",marginBottom:10,lineHeight:1.8}}>
-            📌 How to get free key:<br/>
-            1. Go to <span style={{color:"#00c9a7"}}>console.anthropic.com</span><br/>
-            2. Sign up free → API Keys → Create Key<br/>
-            3. Copy the key (starts with sk-ant-...)<br/>
-            4. Paste below → Save<br/>
-            <span style={{color:"#ffffff22"}}>Free $5 credit = ~200 AI calls. Key stays only on your device.</span>
+          <div style={{marginTop:10}}>
+            <span style={{background:plan==="pro"?"#00c9a722":plan==="admin"?"#f59e0b22":"#ffffff0a",color:plan==="pro"?"#00c9a7":plan==="admin"?"#f59e0b":"#ffffff55",border:`1px solid ${plan==="pro"?"#00c9a744":plan==="admin"?"#f59e0b44":"#ffffff22"}`,borderRadius:6,padding:"3px 10px",fontSize:11,fontWeight:700}}>
+              {plan.toUpperCase()}
+            </span>
           </div>
-        ) : (
-          <div style={{fontSize:11,color:"#ffffff33",marginBottom:10,lineHeight:1.7}}>
-            Enter your API key below to enable AI features. Contact the app owner if you need help getting one.
+        </div>
+
+        {/* AI usage info */}
+        {plan === "free" && (
+          <div style={{background:"#f59e0b0d",border:"1px solid #f59e0b30",borderRadius:10,padding:14,marginBottom:16}}>
+            <div style={{fontWeight:600,color:"#f59e0b",fontSize:13,marginBottom:6}}>⚡ Free Plan — 5 AI calls/day</div>
+            <div style={{fontSize:12,color:"#ffffff55",lineHeight:1.8}}>
+              You get 5 free AI explanations every day.<br/>
+              Upgrade to Pro for unlimited AI access!
+            </div>
           </div>
         )}
-        <input type="password" value={key} onChange={e=>setKey(e.target.value)} placeholder="sk-ant-api03-..."
-          style={{width:"100%",background:"#ffffff08",border:"1px solid #ffffff22",borderRadius:9,padding:"11px 14px",color:"#dde1f0",fontSize:13,outline:"none",marginBottom:14}}/>
-        <div style={{display:"flex",gap:10}}>
-          <Btn full onClick={save} c="#00c9a7">Save Key</Btn>
-          {plan==="free"&&<Btn full onClick={onUpgrade} c="#7c3aed">Upgrade to Pro</Btn>}
-        </div>
-      </Card>
+
+        {plan === "pro" && (
+          <div style={{background:"#00c9a70d",border:"1px solid #00c9a730",borderRadius:10,padding:14,marginBottom:16}}>
+            <div style={{fontWeight:600,color:"#00c9a7",fontSize:13,marginBottom:6}}>✅ Pro Plan — Unlimited AI</div>
+            <div style={{fontSize:12,color:"#ffffff55",lineHeight:1.8}}>
+              You have unlimited AI explanations, evaluations and mock tests!
+            </div>
+          </div>
+        )}
+
+        {plan === "admin" && (
+          <div style={{background:"#f59e0b0d",border:"1px solid #f59e0b30",borderRadius:10,padding:14,marginBottom:16}}>
+            <div style={{fontWeight:600,color:"#f59e0b",fontSize:13,marginBottom:6}}>⚡ Admin — Full Access</div>
+            <div style={{fontSize:12,color:"#ffffff55",lineHeight:1.8}}>
+              You have full unlimited access as the owner.
+            </div>
+          </div>
+        )}
+
+        {/* Upgrade button for free users */}
+        {plan === "free" && (
+          <button onClick={()=>{onClose(); onUpgrade();}} style={{width:"100%",padding:"12px",background:"#00c9a722",border:"1px solid #00c9a744",borderRadius:10,color:"#00c9a7",cursor:"pointer",fontSize:13,fontWeight:600,letterSpacing:0.5}}>
+            ⚡ Upgrade to Pro — ₹99/month
+          </button>
+        )}
+
+        <button onClick={onClose} style={{width:"100%",padding:"10px",background:"transparent",border:"1px solid #ffffff15",borderRadius:10,color:"#ffffff44",cursor:"pointer",fontSize:12,marginTop:10}}>
+          Close
+        </button>
+      </div>
     </div>
   );
 }
